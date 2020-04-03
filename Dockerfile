@@ -8,7 +8,7 @@ RUN apt update -y && apt install -y \
 COPY label_generation.R label_generation.R
 
 #install necessary libraries
-RUN R -e "install.packages(c('dplyr', 'sendmailR', 'dotenv', 'REDCapR', 'RCurl', 'checkmate'))"
+RUN R -e "install.packages(c('dplyr', 'sendmailR', 'dotenv', 'REDCapR', 'RCurl', 'checkmate','baRcodeR'))"
 
 #set the unix commands to run the app
 CMD R -e "source('label_generation.R')"
