@@ -1,7 +1,8 @@
-library(dplyr)
+library(tidyverse)
 library(sendmailR)
 library(dotenv)
 library(REDCapR)
+library(baRcodeR)
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
@@ -10,16 +11,30 @@ email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
 email_subject <- Sys.getenv("EMAIL_SUBJECT")
 
+# TODO: change redcap_uri and api token for production project
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
                                        token = Sys.getenv("API_TOKEN"))$data %>% 
-  slice(rep(1:n(), each = 4))
+  slice(rep(1:n(), each = 4)) %>% 
+  mutate(subject_id = paste(frcovid_fn, frcovid_ln, frcovid_dob, sep = " ")) 
 
-# create output file
-file_name <- paste0("test_tube_labels_", Sys.Date(), ".csv")
-write.csv(test_tube_label, file_name, row.names = F, na = "")
+# date and 24hr time
+time <- format(Sys.time(), "%Y-%m-%d_%H%M")
+
+# output file name
+file_name <- paste0('test_tube_labels_', time)
+
+# create pdf containing test tube labels
+# barcode created from fn ln dob
+custom_create_PDF(user=FALSE, Labels = test_tube_label[,7], 
+                  name = file_name, 
+                  type = 'linear', Fsz = 5, Across = TRUE, 
+                  trunc = FALSE, numrow = 20, 
+                  numcol = 4, page_width = 8.5, page_height = 11, 
+                  width_margin = 0.25, height_margin = 0.5)
 
 # read in the output file and attach it to email
-attachment_object <- mime_part(file_name, file_name)
+pdf_file_name <- paste0(file_name, ".pdf")
+attachment_object <- mime_part(pdf_file_name, pdf_file_name)
 body <- paste0("The attached file includes the labels to be printed.",
                " File generated on ", Sys.time())
 body_with_attachment <- list(body, attachment_object)
@@ -30,5 +45,5 @@ sendmail(from = email_from, to = email_to, cc = email_cc,
          control = email_server)
 
 # delete the output file
-unlink(file_name)
+unlink(pdf_file_name)
 
