@@ -1,6 +1,7 @@
 library(dplyr)
 library(sendmailR)
 library(dotenv)
+library(REDCapR)
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
@@ -9,8 +10,8 @@ email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
 email_subject <- Sys.getenv("EMAIL_SUBJECT")
 
-# will update to read data directly using api
-test_tube_label <- read.csv("TesttubeLabels_DATA_2020-04-02_1340.csv") %>% 
+test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
+                                       token = Sys.getenv("API_TOKEN"))$data %>% 
   slice(rep(1:n(), each = 4))
 
 # create output file
@@ -20,7 +21,7 @@ write.csv(test_tube_label, file_name, row.names = F, na = "")
 # read in the output file and attach it to email
 attachment_object <- mime_part(file_name, file_name)
 body <- paste0("The attached file includes the labels to be printed.",
-               "File generated on ", Sys.time())
+               " File generated on ", Sys.time())
 body_with_attachment <- list(body, attachment_object)
 
 # send the email with the attached output file
@@ -30,18 +31,4 @@ sendmail(from = email_from, to = email_to, cc = email_cc,
 
 # delete the output file
 unlink(file_name)
-
-
-# library(RCurl)
-# result <- postForm(	
-#   uri = 'https://redcap-warrior.ctsi.ufl.edu/prod/api/',	
-#   token = Sys.getenv("API_TOKEN"),	
-#   content = 'report',	
-#   format = 'csv',
-#   rawOrLabel = 'raw',	
-#   rawOrLabelHeaders = 'raw',	
-#   returnFormat = 'csv'	
-# )
-# 
-# df <- read.csv(textConnection(result)) 
 
