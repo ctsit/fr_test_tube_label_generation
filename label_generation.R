@@ -35,8 +35,11 @@ custom_create_PDF(user=FALSE, Labels = test_tube_label[,7],
 # read in the output file and attach it to email
 pdf_file_name <- paste0(file_name, ".pdf")
 attachment_object <- mime_part(pdf_file_name, pdf_file_name)
-body <- paste0("The attached file includes the labels to be printed.",
-               " File generated on ", Sys.time())
+body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 testing project.",
+               "These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
+               "These labels should be printed and packaged with the serum and swab kits for their respective sites.",
+               "The attached files were generated on ", Sys.time(), "."
+               )
 body_with_attachment <- list(body, attachment_object)
 
 # send the email with the attached output file
