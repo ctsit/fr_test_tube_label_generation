@@ -23,7 +23,7 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
                        rep('100000-03-D', 20)),
          frcovid_dob = str_remove_all(frcovid_dob, "-"),
          site = c(rep("KED", 40), rep("SHED", 30), rep("AED", 10))) %>% 
-  # test code
+  # test code ends
   arrange(site, frcovid_ln)  
 
 # create folder to store output
