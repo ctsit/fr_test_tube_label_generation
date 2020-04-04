@@ -21,7 +21,7 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
 time <- format(Sys.time(), "%Y-%m-%d_%H%M")
 
 # output file name
-file_name <- paste0('test_tube_labels_', time)
+file_name <- paste0('fr_covid_test_tube_labels_', time)
 
 # create pdf containing test tube labels
 # barcode created from fn ln dob
@@ -46,4 +46,3 @@ sendmail(from = email_from, to = email_to, cc = email_cc,
 
 # delete the output file
 unlink(pdf_file_name)
-
