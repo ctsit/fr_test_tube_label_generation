@@ -18,7 +18,7 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
   # test code starts
   slice(1:80) %>% 
   mutate(barcode_label = c(rep('123456-00-E', 20), 
-                       rep('000000-01-F', 20),
+                       rep('000000-01-F', 20), 
                        rep('202004-02-8', 20),
                        rep('100000-03-D', 20)),
          frcovid_dob = str_remove_all(frcovid_dob, "-"),
@@ -33,7 +33,7 @@ dir.create(output_dir, recursive = T)
 # create per site roster
 test_tube_label %>% 
   split(.$site) %>% 
-  walk2(paste0(output_dir, "/", names(.), ".csv"), write.csv)
+  walk2(paste0(output_dir, "/", names(.), ".csv"), write.csv, row.names = F)
 
 # create per site barcode pdfs
 test_tube_label %>% 
@@ -52,7 +52,8 @@ freezer_pro <- test_tube_label %>%
              "Level3" = "", "Level4" = "", "Level5" = "", "Box" = "",
              "Position" = "", "Vial" = "", "Label" = "", "Cap" = "",
              "Obtained" = "", "Date" = "")
-write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"))
+write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
+          row.names = F)
 
 # Zip the reports generated
 zipfile_name = paste0("Reports_", output_dir, ".zip")
