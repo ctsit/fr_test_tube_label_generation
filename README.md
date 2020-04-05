@@ -8,4 +8,10 @@ To build the image and run the report using docker within the project directory 
 
 `docker run --env-file .env <image_name>`
 
+To install docker on your Mac:
+`brew cask install docker`
+
+To run docker on your MAC:
+`open /Applications/Docker.app`
+
 Cron details to follow...
