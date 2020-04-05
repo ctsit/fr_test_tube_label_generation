@@ -1,8 +1,10 @@
 library(tidyverse)
 library(sendmailR)
 library(dotenv)
-library(REDCapR)
 library(baRcodeR)
+# devtools::install_github("ropensci/baRcodeR")
+library(REDCapR)
+
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
@@ -13,15 +15,13 @@ email_subject <- Sys.getenv("EMAIL_SUBJECT")
 
 # TODO: change redcap_uri and api token for production project
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
-                                       token = Sys.getenv("API_TOKEN"))$data %>% 
+                                       token = Sys.getenv("API_TOKEN"))$data %>%   
   slice(rep(1:n(), each = 4)) %>% 
   # test code starts
   slice(1:80) %>% 
-  mutate(barcode_label = c(rep('123456-00-E', 20), 
-                       rep('000000-01-F', 20), 
-                       rep('202004-02-8', 20),
-                       rep('100000-03-D', 20)),
-         frcovid_dob = str_remove_all(frcovid_dob, "-"),
+  mutate(
+         frcovid_fn = substr(frcovid_fn, 1, 1),
+         subject_id = paste(frcovid_fn, frcovid_ln, frcovid_dob),
          site = c(rep("KED", 40), rep("SHED", 30), rep("AED", 10))) %>% 
   # test code ends
   arrange(site, frcovid_ln)  
@@ -37,13 +37,19 @@ test_tube_label %>%
 
 # create per site barcode pdfs
 test_tube_label %>% 
-  select(barcode_label, site) %>% 
+  select(sample_id, site, subject_id) %>% 
   split(.$site) %>% 
-  map(~ create_PDF(Labels = .[,1], type = "linear", trunc = F,
-             name = paste0(output_dir, "/", .$site, 
-                           '_fr_covid_test_tube_labels_', 
-                           Sys.Date())))
-
+  map(~ custom_create_PDF(Labels = .$sample_id,
+                          alt_text = .$subject_id,
+                          type = "linear",
+                          denote = c("(",")"),
+                          Fsz = 4.5,
+                          label_height = .30,
+                          label_width = 1.8,
+                          name = paste0(output_dir, "/", .$site, 
+                                         '_fr_covid_test_tube_labels_', 
+                                         Sys.Date())))
+                  
 # create FreezerPro dataset
 freezer_pro <- test_tube_label %>% 
   select(Description = barcode_label) %>%  
