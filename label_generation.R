@@ -1,10 +1,9 @@
 library(tidyverse)
 library(sendmailR)
 library(dotenv)
+library(devtools)
 library(baRcodeR)
-# devtools::install_github("ropensci/baRcodeR")
 library(REDCapR)
-
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
@@ -52,7 +51,7 @@ test_tube_label %>%
                   
 # create FreezerPro dataset
 freezer_pro <- test_tube_label %>% 
-  select(Description = barcode_label) %>%  
+  select(Description = subject_id) %>%  
   add_column("Name" = "", "Volume" = "", "Sample" = "",
              "Type" = "", "Freezer" = "", "Level1" = "", "Level2" = "",
              "Level3" = "", "Level4" = "", "Level5" = "", "Box" = "",
