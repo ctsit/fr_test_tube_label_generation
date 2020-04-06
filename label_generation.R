@@ -2,17 +2,20 @@ library(tidyverse)
 library(sendmailR)
 library(dotenv)
 library(devtools)
+# install dev version of baRcodeR if not previously installed
+# devtools::install_github('ropensci/baRcodeR')
 library(baRcodeR)
 library(REDCapR)
 
-Sys.setenv(TZ = 'America/New_York')
+# set the timezone
+Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
 email_from <- Sys.getenv("EMAIL_FROM")
 email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- paste0("Test Tube Labels ", Sys.time())
+email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), Sys.time())
 
 # TODO: change redcap_uri and api token for production project
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
@@ -27,7 +30,7 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
   arrange(site, frcovid_ln)  
 
 # create folder to store output
-output_dir <- as.character(Sys.Date())
+output_dir <- paste0("fr_covid19_", Sys.Date())
 dir.create(output_dir, recursive = T)
 
 # create per site roster
@@ -59,7 +62,7 @@ write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
           row.names = F)
 
 # Zip the reports generated
-zipfile_name = paste0("Reports_", output_dir, ".zip")
+zipfile_name = paste0("fr_covid19_reports_", output_dir, ".zip")
 zip(zipfile_name, output_dir)
 
 
