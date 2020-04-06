@@ -21,7 +21,6 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
   # test code starts
   slice(1:80) %>% 
   mutate(
-         frcovid_fn = substr(frcovid_fn, 1, 1),
          subject_id = paste(frcovid_fn, frcovid_ln, frcovid_dob),
          site = c(rep("KED", 40), rep("SHED", 30), rep("AED", 10))) %>% 
   # test code ends
