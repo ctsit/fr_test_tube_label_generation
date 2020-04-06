@@ -53,12 +53,9 @@ test_tube_label %>%
                   
 # create FreezerPro dataset
 freezer_pro <- test_tube_label %>% 
-  select(Description = subject_id) %>%  
-  add_column("Name" = "", "Volume" = "", "Sample" = "",
-             "Type" = "", "Freezer" = "", "Level1" = "", "Level2" = "",
-             "Level3" = "", "Level4" = "", "Level5" = "", "Box" = "",
-             "Position" = "", "Vial" = "", "Label" = "", "Cap" = "",
-             "Obtained" = "", "Date" = "")
+  select(Name = subject_id) %>%  
+  add_column("Sample Type" = "",
+             "Freezer" = "",  "Box" = "")
 write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
           row.names = F)
 
