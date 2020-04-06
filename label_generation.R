@@ -62,7 +62,7 @@ write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
           row.names = F)
 
 # Zip the reports generated
-zipfile_name = paste0("fr_covid19_reports_", output_dir, ".zip")
+zipfile_name = paste0(output_dir, ".zip")
 zip(zipfile_name, output_dir)
 
 
@@ -79,4 +79,3 @@ body_with_attachment <- list(body, attachment_object)
 sendmail(from = email_from, to = email_to, cc = email_cc,
          subject = email_subject, body_with_attachment, 
          control = email_server)
-
