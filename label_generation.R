@@ -5,12 +5,14 @@ library(devtools)
 library(baRcodeR)
 library(REDCapR)
 
+Sys.setenv(TZ = 'America/New_York')
+
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
 email_from <- Sys.getenv("EMAIL_FROM")
 email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- Sys.getenv("EMAIL_SUBJECT")
+email_subject <- paste0("Test Tube Labels ", Sys.time())
 
 # TODO: change redcap_uri and api token for production project
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
@@ -70,7 +72,7 @@ attachment_object <- mime_part(zipfile_name, zipfile_name)
 body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 testing project.",
                "These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
                "These labels should be printed and packaged with the serum and swab kits for their respective sites.",
-               "The attached files were generated on ", Sys.Date(), "."
+               "The attached files were generated on ", Sys.time(), "."
                )
 body_with_attachment <- list(body, attachment_object)
 
