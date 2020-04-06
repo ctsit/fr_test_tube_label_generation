@@ -6,6 +6,6 @@ To build the image and run the report using docker within the project directory 
 
 `docker build -t <image_name> .`
 
-`docker run --env-file .env <image_name>`
+`docker run --env-file .env -v path/from/host:/home/fr_test_tube_label_generation <image_name>`
 
 Cron details to follow...

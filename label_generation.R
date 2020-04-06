@@ -1,34 +1,81 @@
-library(dplyr)
+library(tidyverse)
 library(sendmailR)
 library(dotenv)
+library(devtools)
+# install dev version of baRcodeR if not previously installed
+# devtools::install_github('ropensci/baRcodeR')
+library(baRcodeR)
 library(REDCapR)
+
+# set the timezone
+Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
 email_from <- Sys.getenv("EMAIL_FROM")
 email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- Sys.getenv("EMAIL_SUBJECT")
+email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), Sys.time())
 
+# TODO: change redcap_uri and api token for production project
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
-                                       token = Sys.getenv("API_TOKEN"))$data %>% 
-  slice(rep(1:n(), each = 4))
+                                       token = Sys.getenv("API_TOKEN"))$data %>%   
+  slice(rep(1:n(), each = 4)) %>% 
+  # test code starts
+  slice(1:80) %>% 
+  mutate(
+         subject_id = paste(frcovid_fn, frcovid_ln, frcovid_dob),
+         site = c(rep("KED", 40), rep("SHED", 30), rep("AED", 10))) %>% 
+  # test code ends
+  arrange(site, frcovid_ln)  
 
-# create output file
-file_name <- paste0("test_tube_labels_", Sys.Date(), ".csv")
-write.csv(test_tube_label, file_name, row.names = F, na = "")
+# create folder to store output
+output_dir <- paste0("fr_covid19_", Sys.Date())
+dir.create(output_dir, recursive = T)
 
-# read in the output file and attach it to email
-attachment_object <- mime_part(file_name, file_name)
-body <- paste0("The attached file includes the labels to be printed.",
-               " File generated on ", Sys.time())
+# create per site roster
+test_tube_label %>% 
+  split(.$site) %>% 
+  walk2(paste0(output_dir, "/", names(.), ".csv"), write.csv, row.names = F)
+
+# create per site barcode pdfs
+test_tube_label %>% 
+  select(sample_id, site, subject_id) %>% 
+  split(.$site) %>% 
+  map(~ custom_create_PDF(Labels = .$sample_id,
+                          alt_text = .$subject_id,
+                          type = "linear",
+                          denote = c("(",")"),
+                          Fsz = 4.5,
+                          label_height = .30,
+                          label_width = 1.8,
+                          name = paste0(output_dir, "/", .$site, 
+                                         '_fr_covid_test_tube_labels_', 
+                                         Sys.Date())))
+                  
+# create FreezerPro dataset
+freezer_pro <- test_tube_label %>% 
+  select(Name = subject_id) %>%  
+  add_column("Sample Type" = "",
+             "Freezer" = "",  "Box" = "")
+write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
+          row.names = F)
+
+# Zip the reports generated
+zipfile_name = paste0(output_dir, ".zip")
+zip(zipfile_name, output_dir)
+
+
+# attach the zip file and email it
+attachment_object <- mime_part(zipfile_name, zipfile_name)
+body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 testing project.",
+               "These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
+               "These labels should be printed and packaged with the serum and swab kits for their respective sites.",
+               "The attached files were generated on ", Sys.time(), "."
+               )
 body_with_attachment <- list(body, attachment_object)
 
 # send the email with the attached output file
 sendmail(from = email_from, to = email_to, cc = email_cc,
          subject = email_subject, body_with_attachment, 
          control = email_server)
-
-# delete the output file
-unlink(file_name)
-
