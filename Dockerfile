@@ -6,7 +6,7 @@ RUN apt update -y && apt install -y \
  libcurl4-openssl-dev 
 
 #install necessary libraries
-RUN R -e "install.packages(c('dplyr', 'sendmailR', 'dotenv', 'REDCapR', 'RCurl', 'checkmate','devtools'))"
+RUN R -e "install.packages(c('dplyr', 'sendmailR', 'dotenv', 'REDCapR', 'RCurl', 'checkmate','devtools', 'qrcode'))"
 
 # install barcoder form github
 RUN R -e "devtools::install_github('ropensci/baRcodeR')"
