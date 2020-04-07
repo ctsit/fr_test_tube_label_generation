@@ -6,6 +6,7 @@ library(devtools)
 # devtools::install_github('ropensci/baRcodeR')
 library(baRcodeR)
 library(REDCapR)
+library(lubridate)
 
 # set the timezone
 Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
@@ -15,61 +16,65 @@ email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
 email_from <- Sys.getenv("EMAIL_FROM")
 email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), Sys.time())
+email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), today() + 1)
 
-# TODO: change redcap_uri and api token for production project
+# When script is run Mon-Fri appt_date is the next day
+# When script is run on Sat appt_day is Monday
+appt_date <- case_when(
+  wday(now()) == 7 ~ today() + 2,
+  TRUE ~ today() + 1
+)
+
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
                                        token = Sys.getenv("API_TOKEN"))$data %>%
-  slice(rep(1:n(), each = 4)) %>%
-  # test code starts
-  slice(1:80) %>%
-  mutate(
-         subject_id = paste(frcovid_fn, frcovid_ln, frcovid_dob),
-         site = c(rep("KED", 40), rep("SHED", 20), rep("AED", 20))) %>%
-  # test code ends
-  arrange(site, frcovid_ln)
+  select(research_encounter_id, ce_firstname, ce_lastname, patient_dob,
+         site_short_name, site_long_name, test_date_and_time) %>%
+  mutate(ce_firstname = str_to_title(ce_firstname),
+         ce_lastname = str_to_title(ce_lastname),
+         subject_id = paste(ce_firstname, ce_lastname, patient_dob)) %>%
+  filter(as_date(test_date_and_time) == appt_date) %>%
+  arrange(site_short_name, ce_lastname)
 
 # create folder to store output
-output_dir <- paste0("fr_covid19_", Sys.Date())
+output_dir <- paste0("fr_covid19_", today())
 dir.create(output_dir, recursive = T)
 
 # create per site roster
 test_tube_label %>%
-  split(.$site) %>%
+  select(-subject_id) %>%
+  split(.$site_short_name) %>%
   walk2(paste0(output_dir, "/", names(.), ".csv"), write.csv, row.names = F)
 
 # create per site barcode pdfs
 test_tube_label %>%
-  select(sample_id, site, subject_id) %>%
-  split(.$site) %>%
-  map(~ custom_create_PDF(Labels = .$sample_id,
+  select(research_encounter_id, site_short_name, subject_id) %>%
+  slice(rep(1:n(), each = 4)) %>%
+  split(.$site_short_name) %>%
+  # add site and appt date on first page for each site
+  map(~ add_row(.,
+                subject_id = rep(paste("Appt Date:", appt_date), 4),
+                research_encounter_id = rep(unique(.$site_short_name),4),
+                site_short_name = rep(unique(.$site_short_name),4),
+                .before = 1)) %>%
+  map(~ custom_create_PDF(Labels = .$research_encounter_id,
                           alt_text = .$subject_id,
                           type = "linear",
                           denote = c("(",")"),
                           label_height = .20,
-                          name = paste0(output_dir, "/", .$site,
+                          name = paste0(output_dir, "/", .$site_short_name,
                                          '_fr_covid_test_tube_labels_',
-                                         Sys.Date())))
-
-# create FreezerPro dataset
-freezer_pro <- test_tube_label %>%
-  select(Name = subject_id) %>%
-  add_column("Sample Type" = "",
-             "Freezer" = "",  "Box" = "")
-write.csv(freezer_pro, paste0(output_dir, "/FreezerPro_",Sys.Date(), ".csv"),
-          row.names = F)
+                                         today())))
 
 # Zip the reports generated
 zipfile_name = paste0(output_dir, ".zip")
 zip(zipfile_name, output_dir)
 
-
 # attach the zip file and email it
 attachment_object <- mime_part(zipfile_name, zipfile_name)
-body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 testing project.",
-               "These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
-               "These labels should be printed and packaged with the serum and swab kits for their respective sites.",
-               "The attached files were generated on ", Sys.time(), "."
+body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 project.",
+               " These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
+               " These labels should be printed and packaged with the serum and swab kits for their respective sites.",
+               " The attached files were generated on ", now(), "."
                )
 body_with_attachment <- list(body, attachment_object)
 
@@ -77,3 +82,6 @@ body_with_attachment <- list(body, attachment_object)
 sendmail(from = email_from, to = email_to, cc = email_cc,
          subject = email_subject, body_with_attachment,
          control = email_server)
+
+# uncomment to delete output once on tools4
+# unlink(zipfile_name)
