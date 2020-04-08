@@ -35,15 +35,20 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
   filter(as_date(test_date_and_time) == appt_date) %>%
   arrange(site_short_name, ce_lastname)
 
+appt_counts <- test_tube_label %>%
+  count(site_short_name) %>%
+  add_row(site_short_name = "Total", n = nrow(test_tube_label)) %>%
+  unite("Counts", sep = " = ")
+
 # create folder to store output
-output_dir <- paste0("fr_covid19_", today())
+output_dir <- paste0("fr_covid19_", appt_date)
 dir.create(output_dir, recursive = T)
 
 # create per site roster
 test_tube_label %>%
   select(-subject_id) %>%
   split(.$site_short_name) %>%
-  walk2(paste0(output_dir, "/", names(.), ".csv"), write.csv, row.names = F)
+  walk2(paste0(output_dir, "/", names(.), "_", appt_date, ".csv"), write.csv, row.names = F)
 
 # create per site barcode pdfs
 test_tube_label %>%
@@ -63,7 +68,7 @@ test_tube_label %>%
                           label_height = .20,
                           name = paste0(output_dir, "/", .$site_short_name,
                                          '_fr_covid_test_tube_labels_',
-                                         today())))
+                                         appt_date)))
 
 # Zip the reports generated
 zipfile_name = paste0(output_dir, ".zip")
@@ -74,13 +79,15 @@ attachment_object <- mime_part(zipfile_name, zipfile_name)
 body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 project.",
                " These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
                " These labels should be printed and packaged with the serum and swab kits for their respective sites.",
-               " The attached files were generated on ", now(), "."
-               )
+               " The attached files were generated on ", now(), ".",
+               "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct::]]")
+)
+
 body_with_attachment <- list(body, attachment_object)
 
 # send the email with the attached output file
 sendmail(from = email_from, to = email_to, cc = email_cc,
-         subject = email_subject, body_with_attachment,
+         subject = email_subject, msg = body_with_attachment,
          control = email_server)
 
 # uncomment to delete output once on tools4
