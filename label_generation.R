@@ -33,7 +33,7 @@ test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu
          ce_lastname = str_to_title(ce_lastname),
          subject_id = paste(ce_firstname, ce_lastname, patient_dob)) %>%
   filter(as_date(test_date_and_time) == appt_date) %>%
-  arrange(site_short_name, ce_lastname)
+  arrange(site_short_name, test_date_and_time)
 
 appt_counts <- test_tube_label %>%
   count(site_short_name) %>%
@@ -91,4 +91,5 @@ sendmail(from = email_from, to = email_to, cc = email_cc,
          control = email_server)
 
 # uncomment to delete output once on tools4
-# unlink(zipfile_name)
+# unlink(zipfile_name, recursive = T)
+# unlink(output_dir, recursive = T)
