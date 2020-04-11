@@ -11,19 +11,19 @@ library(lubridate)
 # set the timezone
 Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
 
-# email credentials
-email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
-email_from <- Sys.getenv("EMAIL_FROM")
-email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
-email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), today() + 1)
-
 # When script is run Mon-Fri appt_date is the next day
 # When script is run on Sat appt_day is Monday
 appt_date <- case_when(
   wday(now()) == 7 ~ today() + 2,
   TRUE ~ today() + 1
 )
+
+# email credentials
+email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
+email_from <- Sys.getenv("EMAIL_FROM")
+email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
+email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
+email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), appt_date)
 
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
                                        token = Sys.getenv("API_TOKEN"))$data %>%
