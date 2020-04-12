@@ -50,25 +50,57 @@ test_tube_label %>%
   split(.$site_short_name) %>%
   walk2(paste0(output_dir, "/", names(.), "_", appt_date, ".csv"), write.csv, row.names = F)
 
+# add sitname and appt date at specified position
+add_new_row <- function(per_site_df, ...){
+  add_row(per_site_df,
+          subject_id = paste("Appt Date:", appt_date),
+          research_encounter_id = unique(per_site_df$site_short_name),
+          site_short_name = unique(per_site_df$site_short_name),
+          ...)
+}
+
+
+sites <- unique(test_tube_label$site_short_name)
 # create per site barcode pdfs
-test_tube_label %>%
-  select(research_encounter_id, site_short_name, subject_id) %>%
-  slice(rep(1:n(), each = 4)) %>%
-  split(.$site_short_name) %>%
-  # add site and appt date on first page for each site
-  map(~ add_row(.,
-                subject_id = rep(paste("Appt Date:", appt_date), 4),
-                research_encounter_id = rep(unique(.$site_short_name),4),
-                site_short_name = rep(unique(.$site_short_name),4),
-                .before = 1)) %>%
-  map(~ custom_create_PDF(Labels = .$research_encounter_id,
-                          alt_text = .$subject_id,
-                          type = "linear",
-                          denote = c("(",")"),
-                          label_height = .20,
-                          name = paste0(output_dir, "/", .$site_short_name,
-                                         '_fr_covid_test_tube_labels_',
-                                         appt_date)))
+for (site in sites){
+
+  per_site_df <- test_tube_label %>%
+    select(research_encounter_id, site_short_name, subject_id) %>%
+    filter(site_short_name == site)
+
+  if(nrow(per_site_df) <= 18){
+    per_site_df <- per_site_df %>%
+      add_new_row(.before = 1) %>%
+      add_new_row() %>%
+      slice(rep(1:n(), each = 4))
+  } else if (nrow(per_site_df) <= 40){
+    per_site_df <- per_site_df %>%
+      add_new_row(.before = 1) %>%
+      add_new_row(.before = 20) %>%
+      add_new_row(.before = 21) %>%
+      add_new_row() %>%
+      slice(rep(1:n(), each = 4))
+  } else {
+    per_site_df <- per_site_df %>%
+      add_new_row(.before = 1) %>%
+      add_new_row(.before = 20) %>%
+      add_new_row(.before = 21) %>%
+      add_new_row(.before = 40) %>%
+      add_new_row(.before = 41) %>%
+      add_new_row() %>%
+      slice(rep(1:n(), each = 4))
+  }
+
+  custom_create_PDF(Labels = per_site_df$research_encounter_id,
+                    alt_text = per_site_df$subject_id,
+                    type = "linear",
+                    denote = c("(",")"),
+                    label_height = .20,
+                    name = paste0(output_dir, "/", site,
+                                  '_fr_covid_test_tube_labels_',
+                                  appt_date))
+}
+
 
 # Zip the reports generated
 zipfile_name = paste0(output_dir, ".zip")
