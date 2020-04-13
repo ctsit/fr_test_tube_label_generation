@@ -33,17 +33,15 @@ baseline_records <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.ed
   filter(redcap_event_name == 'baseline_arm_1' & !is.na(ce_firstname)) %>%
   select(record_id, ce_firstname, ce_lastname, patient_dob) %>%
   mutate(ce_firstname = str_to_title(ce_firstname),
-         ce_lastname = str_to_title(ce_lastname))
+         ce_lastname = str_to_title(ce_lastname),
+         subject_id = paste(ce_firstname, ce_lastname, patient_dob))
 
 test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
                                        token = Sys.getenv("API_TOKEN"))$data %>%
   select(research_encounter_id,record_id, redcap_event_name,
          site_short_name, site_long_name, test_date_and_time) %>%
-  left_join(baseline_records, by = "record_id") %>%
-  mutate(ce_firstname = str_to_title(ce_firstname),
-         ce_lastname = str_to_title(ce_lastname),
-         subject_id = paste(ce_firstname, ce_lastname, patient_dob)) %>%
   filter(as_date(test_date_and_time) == appt_date) %>%
+  left_join(baseline_records, by = "record_id") %>%
   arrange(site_short_name, test_date_and_time)
 
 appt_counts <- test_tube_label %>%
