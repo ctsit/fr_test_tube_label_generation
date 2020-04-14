@@ -4,7 +4,7 @@ This project provides data products in support of the First Responders COVID-19 
 
 ## Prerequisites
 
-This script use R and these R packages:
+This script uses R and these R packages:
 
     tidyverse
     dotenv
