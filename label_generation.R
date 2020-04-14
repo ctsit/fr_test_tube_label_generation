@@ -8,6 +8,8 @@ library(baRcodeR)
 library(REDCapR)
 library(lubridate)
 
+source("functions.R")
+
 # set the timezone
 Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
 
@@ -25,24 +27,7 @@ email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
 email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
 email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), appt_date)
 
-# get baseline fields
-fields_from_baseline <- c("ce_firstname", "ce_lastname", "patient_dob")
-
-baseline_records <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
-                                        token = Sys.getenv("API_TOKEN"))$data %>%
-  filter(redcap_event_name == 'baseline_arm_1' & !is.na(ce_firstname)) %>%
-  select(record_id, ce_firstname, ce_lastname, patient_dob) %>%
-  mutate(ce_firstname = str_to_title(ce_firstname),
-         ce_lastname = str_to_title(ce_lastname),
-         subject_id = paste(ce_firstname, ce_lastname, patient_dob))
-
-test_tube_label <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
-                                       token = Sys.getenv("API_TOKEN"))$data %>%
-  select(research_encounter_id,record_id, redcap_event_name,
-         site_short_name, site_long_name, test_date_and_time) %>%
-  filter(as_date(test_date_and_time) == appt_date) %>%
-  left_join(baseline_records, by = "record_id") %>%
-  arrange(site_short_name, test_date_and_time)
+test_tube_label <- get_test_tube_label()
 
 appt_counts <- test_tube_label %>%
   count(site_short_name) %>%
@@ -59,16 +44,6 @@ test_tube_label %>%
   split(.$site_short_name) %>%
   walk2(paste0(output_dir, "/", names(.), "_", appt_date, ".csv"), write.csv, row.names = F)
 
-# add sitname and appt date at specified position
-add_new_row <- function(per_site_df, ...){
-  add_row(per_site_df,
-          subject_id = paste("Appt Date:", appt_date),
-          research_encounter_id = unique(per_site_df$site_short_name),
-          site_short_name = unique(per_site_df$site_short_name),
-          ...)
-}
-
-
 sites <- unique(test_tube_label$site_short_name)
 # create per site barcode pdfs
 for (site in sites){
@@ -77,34 +52,32 @@ for (site in sites){
     select(research_encounter_id, site_short_name, subject_id) %>%
     filter(site_short_name == site)
 
-  if(nrow(per_site_df) <= 18){
+  if(nrow(per_site_df) <= 19){
     per_site_df <- per_site_df %>%
       add_new_row(.before = 1) %>%
-      add_new_row() %>%
       slice(rep(1:n(), each = 4))
-  } else if (nrow(per_site_df) <= 40){
+  } else if (nrow(per_site_df) <= 38){
     per_site_df <- per_site_df %>%
       add_new_row(.before = 1) %>%
-      add_new_row(.before = 20) %>%
       add_new_row(.before = 21) %>%
-      add_new_row() %>%
       slice(rep(1:n(), each = 4))
   } else {
     per_site_df <- per_site_df %>%
       add_new_row(.before = 1) %>%
-      add_new_row(.before = 20) %>%
       add_new_row(.before = 21) %>%
-      add_new_row(.before = 40) %>%
       add_new_row(.before = 41) %>%
-      add_new_row() %>%
       slice(rep(1:n(), each = 4))
   }
 
   custom_create_PDF(Labels = per_site_df$research_encounter_id,
                     alt_text = per_site_df$subject_id,
-                    type = "linear",
-                    denote = c("(",")"),
-                    label_height = .20,
+                    type = "matrix",
+                    label_height = 0.3,
+                    denote = c("\n","\n"),
+                    Fsz = 5,
+                    trunc = T,
+                    y_space = 0.5,
+                    ErrCorr = "Q",
                     name = paste0(output_dir, "/", site,
                                   '_fr_covid_test_tube_labels_',
                                   appt_date))
