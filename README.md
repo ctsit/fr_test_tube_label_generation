@@ -21,7 +21,7 @@ This script uses the REDCap API to download the data from REDCap. The API must b
 
 ## Setup and Configuration
 
-This script is configured entirely via the environment. An example `.env` file is provided as [`env.example`](env.example). To use this file, copy it to the name `.env` and customize according to your project needs. Follow these steps to build the required components and configure the script's `.env` file.
+This script is configured entirely via the environment. An example `.env` file is provided as [`example.env`](example.env). To use this file, copy it to the name `.env` and customize according to your project needs. Follow these steps to build the required components and configure the script's `.env` file.
 
 1. Create the REDCap project from [`First_Responder_COVID19.xml`](https://github.com/ctsit/fr_covidata/blob/master/example/First_Responder_COVID19.xml). 
 1. Give a user User Rights of _Full Data Set_ for _Data Exports_

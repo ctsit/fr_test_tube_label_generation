@@ -22,27 +22,28 @@ appt_date <- case_when(
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
-email_from <- Sys.getenv("FR_EMAIL_FROM")
-email_to <- unlist(strsplit(Sys.getenv("FR_EMAIL_TO")," "))
-email_cc <- unlist(strsplit(Sys.getenv("FR_EMAIL_CC")," "))
-email_subject <- paste(Sys.getenv("FR_EMAIL_SUBJECT"), appt_date)
+email_from <- Sys.getenv("PK_EMAIL_FROM")
+email_to <- unlist(strsplit(Sys.getenv("PK_EMAIL_TO")," "))
+email_cc <- unlist(strsplit(Sys.getenv("PK_EMAIL_CC")," "))
+email_subject <- paste(Sys.getenv("PK_EMAIL_SUBJECT"), appt_date)
 
-test_tube_label <- get_test_tube_label()
+test_tube_label <- get_pk_test_tube_label()
 
 appt_counts <- test_tube_label %>%
-  count(site_short_name) %>%
-  add_row(site_short_name = "Total", n = nrow(test_tube_label)) %>%
+  count(site_long_name) %>%
+  add_row(site_long_name = "Total", n = nrow(test_tube_label)) %>%
   unite("Counts", sep = " = ")
 
 # create folder to store output
-output_dir <- paste0("fr_covid19_", appt_date)
+output_dir <- paste0("pk_covid19_", appt_date)
 dir.create(output_dir, recursive = T)
 
 # create per site roster
 test_tube_label %>%
   select(-subject_id) %>%
-  split(.$site_short_name) %>%
-  walk2(paste0(output_dir, "/", names(.), "_", appt_date, ".csv"), write.csv, row.names = F)
+  write.csv(paste0(output_dir, "/pk_yonge_roster_", appt_date, ".csv"),
+            na = "", row.names = F)
+
 
 sites <- unique(test_tube_label$site_short_name)
 # create per site barcode pdfs
@@ -79,7 +80,7 @@ for (site in sites){
                     y_space = 0.5,
                     ErrCorr = "Q",
                     name = paste0(output_dir, "/", site,
-                                  '_fr_covid_test_tube_labels_',
+                                  '_pk_covid_test_tube_labels_',
                                   appt_date))
 }
 
@@ -90,9 +91,9 @@ zip(zipfile_name, output_dir)
 
 # attach the zip file and email it
 attachment_object <- mime_part(zipfile_name, zipfile_name)
-body <- paste0("The attached files include labels to be printed for the First Responder COVID-19 project.",
-               " These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
-               " These labels should be printed and packaged with the serum and swab kits for their respective sites.",
+body <- paste0("The attached files include labels to be printed for the PK Yonge COVID-19 project.",
+               " These labels are designed for the blood spot cards and swab collection kits to be used at the collection sites.",
+               " These labels should be printed and packaged with the blood spot and swab kits for their respective sites.",
                " The attached files were generated on ", now(), ".",
                "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct:]]")
 )
