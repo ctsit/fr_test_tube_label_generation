@@ -22,10 +22,10 @@ appt_date <- case_when(
 
 # email credentials
 email_server <- list(smtpServer = Sys.getenv("SMTP_SERVER"))
-email_from <- Sys.getenv("EMAIL_FROM")
-email_to <- unlist(strsplit(Sys.getenv("EMAIL_TO")," "))
-email_cc <- unlist(strsplit(Sys.getenv("EMAIL_CC")," "))
-email_subject <- paste(Sys.getenv("EMAIL_SUBJECT"), appt_date)
+email_from <- Sys.getenv("FR_EMAIL_FROM")
+email_to <- unlist(strsplit(Sys.getenv("FR_EMAIL_TO")," "))
+email_cc <- unlist(strsplit(Sys.getenv("FR_EMAIL_CC")," "))
+email_subject <- paste(Sys.getenv("FR_EMAIL_SUBJECT"), appt_date)
 
 test_tube_label <- get_test_tube_label()
 
