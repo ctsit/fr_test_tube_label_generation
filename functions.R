@@ -50,6 +50,7 @@ get_pk_test_tube_label <- function(){
     select(-record_id) %>%
     add_column("Barcode Confirmed" = "",
                "Picture ID Confirmed" = "",
+               "Temperature" = "",
                "Assent-Consent Confirmed" = "") %>%
     arrange(test_date_and_time, ce_lastname)
 
