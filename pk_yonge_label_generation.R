@@ -92,10 +92,10 @@ zip(zipfile_name, output_dir)
 # attach the zip file and email it
 attachment_object <- mime_part(zipfile_name, zipfile_name)
 body <- paste0("The attached files include labels to be printed for the PK Yonge COVID-19 project.",
-               " These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
-               " These labels should be printed and packaged with the serum and swab kits for their respective sites.",
+               " These labels are designed for the blood spot cards and swab collection kits to be used at the collection sites.",
+               " These labels should be printed and packaged with the blood spot and swab kits for their respective sites.",
                " The attached files were generated on ", now(), ".",
-               "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct::]]")
+               "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct:]]")
 )
 
 body_with_attachment <- list(body, attachment_object)
