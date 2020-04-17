@@ -94,16 +94,17 @@ body <- paste0("The attached files include labels to be printed for the First Re
                " These labels are designed for the serum tubes and swab collection kits to be used at the collection sites.",
                " These labels should be printed and packaged with the serum and swab kits for their respective sites.",
                " The attached files were generated on ", now(), ".",
-               "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct:]]")
-)
+               "\n\nNumber of appts for ", appt_date, ": ",
+               str_remove(appt_counts, "c"))
+
 
 body_with_attachment <- list(body, attachment_object)
 
 # send the email with the attached output file
-sendmail(from = email_from, to = email_to, cc = email_cc,
+sendmail(from = email_from, to = email_to,cc = email_cc,
          subject = email_subject, msg = body_with_attachment,
          control = email_server)
 
 # uncomment to delete output once on tools4
-# unlink(zipfile_name, recursive = T)
-# unlink(output_dir, recursive = T)
+unlink(zipfile_name, recursive = T)
+unlink(output_dir, recursive = T)

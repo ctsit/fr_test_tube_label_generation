@@ -44,14 +44,14 @@ test_tube_label %>%
   write.csv(paste0(output_dir, "/pk_yonge_roster_", appt_date, ".csv"),
             na = "", row.names = F)
 
-
 sites <- unique(test_tube_label$site_short_name)
 # create per site barcode pdfs
 for (site in sites){
 
   per_site_df <- test_tube_label %>%
     select(research_encounter_id, site_short_name, subject_id) %>%
-    filter(site_short_name == site)
+    filter(site_short_name == site)  %>%
+    mutate(site_short_name = paste("Tent ", site_short_name))
 
   if(nrow(per_site_df) <= 19){
     per_site_df <- per_site_df %>%
@@ -95,7 +95,8 @@ body <- paste0("The attached files include labels to be printed for the PK Yonge
                " These labels are designed for the blood spot cards and swab collection kits to be used at the collection sites.",
                " These labels should be printed and packaged with the blood spot and swab kits for their respective sites.",
                " The attached files were generated on ", now(), ".",
-               "\n\nNumber of appts for ", appt_date, ": ", str_remove_all(appt_counts,"[[:punct:]]")
+               "\n\nNumber of appts for ", appt_date, ": ",
+               str_remove(appt_counts,"c")
 )
 
 body_with_attachment <- list(body, attachment_object)
@@ -105,6 +106,6 @@ sendmail(from = email_from, to = email_to, cc = email_cc,
          subject = email_subject, msg = body_with_attachment,
          control = email_server)
 
-# uncomment to delete output once on tools4
-# unlink(zipfile_name, recursive = T)
-# unlink(output_dir, recursive = T)
+# delete output once on tools4
+unlink(zipfile_name, recursive = T)
+unlink(output_dir, recursive = T)
