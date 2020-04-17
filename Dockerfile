@@ -12,4 +12,4 @@ RUN R -e "install.packages(c('dplyr', 'sendmailR', 'dotenv', 'REDCapR', 'RCurl',
 RUN R -e "devtools::install_github('ropensci/baRcodeR')"
 
 #set the unix commands to run the app
-CMD pwd && ls -AlhF ./
+CMD ls ./
