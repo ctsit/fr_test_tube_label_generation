@@ -1,6 +1,6 @@
 FROM rocker/tidyverse
 
-WORKDIR /home/test_tube_label_generation
+WORKDIR /home/label_generation
 
 RUN apt update -y && apt install -y \
  libcurl4-openssl-dev
