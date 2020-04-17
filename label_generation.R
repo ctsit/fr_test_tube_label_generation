@@ -106,5 +106,5 @@ sendmail(from = email_from, to = email_to,cc = email_cc,
          control = email_server)
 
 # uncomment to delete output once on tools4
-# unlink(zipfile_name, recursive = T)
-# unlink(output_dir, recursive = T)
+unlink(zipfile_name, recursive = T)
+unlink(output_dir, recursive = T)
