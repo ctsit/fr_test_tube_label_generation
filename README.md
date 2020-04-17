@@ -38,7 +38,7 @@ Build the image and run the report using docker within the project directory lik
 
 `docker build -t <image_name> .`
 
-`docker run --env-file .env -v path/from/host:/home/fr_covidata_engine <image_name>`
+`docker run --env-file .env -v path/from/host:/home/label_generation <image_name> Rscript <script_name>`
 
 
 
