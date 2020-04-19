@@ -44,45 +44,29 @@ test_tube_label %>%
   write.csv(paste0(output_dir, "/pk_yonge_roster_", appt_date, ".csv"),
             na = "", row.names = F)
 
-sites <- unique(test_tube_label$site_short_name)
-# create per site barcode pdfs
-for (site in sites){
+per_site_df <- test_tube_label %>%
+  select(research_encounter_id, site_short_name, subject_id) %>%
+  mutate(site_short_name = paste("Tent ", site_short_name)) %>%
+  add_row(.,
+          subject_id = paste("Appt Date:", appt_date),
+          research_encounter_id = "Site Barcodes",
+          site_short_name = "Site Barcodes",
+          .before = 1) %>%
+    slice(rep(1:n(), each = 4))
 
-  per_site_df <- test_tube_label %>%
-    select(research_encounter_id, site_short_name, subject_id) %>%
-    filter(site_short_name == site)  %>%
-    mutate(site_short_name = paste("Tent ", site_short_name))
+custom_create_PDF(Labels = per_site_df$research_encounter_id,
+                  alt_text = per_site_df$subject_id,
+                  type = "matrix",
+                  label_height = 0.3,
+                  denote = c("\n","\n"),
+                  Fsz = 5,
+                  trunc = T,
+                  y_space = 0.5,
+                  ErrCorr = "Q",
+                  name = paste0(output_dir,
+                                '/pk_covid_test_tube_labels_',
+                                appt_date))
 
-  if(nrow(per_site_df) <= 19){
-    per_site_df <- per_site_df %>%
-      add_new_row(.before = 1) %>%
-      slice(rep(1:n(), each = 4))
-  } else if (nrow(per_site_df) <= 38){
-    per_site_df <- per_site_df %>%
-      add_new_row(.before = 1) %>%
-      add_new_row(.before = 21) %>%
-      slice(rep(1:n(), each = 4))
-  } else {
-    per_site_df <- per_site_df %>%
-      add_new_row(.before = 1) %>%
-      add_new_row(.before = 21) %>%
-      add_new_row(.before = 41) %>%
-      slice(rep(1:n(), each = 4))
-  }
-
-  custom_create_PDF(Labels = per_site_df$research_encounter_id,
-                    alt_text = per_site_df$subject_id,
-                    type = "matrix",
-                    label_height = 0.3,
-                    denote = c("\n","\n"),
-                    Fsz = 5,
-                    trunc = T,
-                    y_space = 0.5,
-                    ErrCorr = "Q",
-                    name = paste0(output_dir, "/", site,
-                                  '_pk_covid_test_tube_labels_',
-                                  appt_date))
-}
 
 
 # Zip the reports generated
