@@ -10,6 +10,10 @@ library(lubridate)
 
 source("functions.R")
 
+# echo details from the .env file we read
+Sys.getenv("INSTANCE")
+Sys.getenv("PROJECT")
+
 # set the timezone
 Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
 

@@ -36,7 +36,7 @@ get_pk_test_tube_label <- function(){
 
   baseline_records <- records %>%
     filter(redcap_event_name == 'baseline_arm_1' & !is.na(ce_firstname)) %>%
-    select(record_id, ce_firstname, ce_lastname, patient_dob,
+    select(record_id, ce_firstname, ce_lastname, patient_dob, "Phone Number" = qpk_phone,
            "Finger_Prick_OK" = icf_fingerstick) %>%
     mutate(ce_firstname = str_to_title(ce_firstname),
            ce_lastname = str_to_title(ce_lastname),
