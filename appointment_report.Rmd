@@ -1,0 +1,56 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(sendmailR)
+library(dotenv)
+library(REDCapR)
+library(lubridate)
+library(kableExtra)
+source("functions.R")
+
+# set the timezone
+Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
+
+project_start_date <- ymd("2020-04-08")
+current_date <- Sys.Date()
+```
+
+### Covid19 Swab Results by agency for `r project_start_date` to `r current_date`
+```{r}
+# read appointment data betewwen 2020-04-08 and script run date 
+records <- redcap_read_oneshot(redcap_uri = 'https://redcap.ctsi.ufl.edu/redcap/api/',
+                               token = Sys.getenv("FR_API_TOKEN"),
+                               raw_or_label = "label")$data %>% 
+  filter(between(as_date(test_date_and_time), project_start_date, current_date))
+  
+records <- records %>%
+  mutate(
+    q_agency = str_to_title(
+      case_when(q_agency == "Other (specify below)" ~ q_agency_other, 
+                is.na(q_agency) ~ "Agency Unknown",
+                TRUE ~ q_agency)),
+    time_since_test = floor(Sys.time() - test_date_and_time),
+    covid_19_swab_result = case_when(
+      time_since_test >= 48 & is.na(covid_19_swab_result) ~ "No Show",
+      time_since_test < 48 & is.na(covid_19_swab_result) ~ "Waiting for Results",
+      TRUE ~ covid_19_swab_result)) %>%
+  select(record_id, "Agency" = q_agency, covid_19_swab_result)
+
+appt_by_agency <- records %>% 
+  count(Agency, covid_19_swab_result) %>% 
+  pivot_wider(names_from = covid_19_swab_result, values_from = n) %>% 
+  mutate_all(replace_na, 0) %>% 
+  mutate(Total = rowSums(.[2:5])) %>% 
+  arrange(desc(Total))
+
+kable(appt_by_agency) %>% 
+  kable_styling("striped")
+```
