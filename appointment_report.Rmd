@@ -8,13 +8,13 @@ knitr::opts_chunk$set(
 	message = FALSE,
 	warning = FALSE
 )
+
 library(tidyverse)
 library(sendmailR)
 library(dotenv)
 library(REDCapR)
 library(lubridate)
 library(kableExtra)
-source("functions.R")
 
 # set the timezone
 Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
