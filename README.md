@@ -36,9 +36,9 @@ The primary script is [`label_generation.R`](label_generation.R). It can be run 
 
 Build the image and run the report using docker within the project directory like this:
 
-`docker build -t <image_name> .`
+`docker build -t label_generation_all .`
 
-`docker run --env-file .env -v path/from/host:/home/label_generation <image_name> Rscript <script_name>`
+`docker run --rm --env-file <path_to_dir_full_of_env_files>/my.env label_generation_all Rscript *label_generation.R`
 
 
 
