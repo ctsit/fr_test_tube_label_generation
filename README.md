@@ -38,7 +38,6 @@ Build the image and run the report using docker within the project directory lik
 
 `docker build -t label_generation_all .`
 
-`docker run --rm --env-file <path_to_dir_full_of_env_files>/my.env label_generation_all Rscript *label_generation.R`
-
+`docker run --rm --env-file <path_to_dir_full_of_env_files>/my.env label_generation_all Rscript pky_label_generation.R`
 
 
