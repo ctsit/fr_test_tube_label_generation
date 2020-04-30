@@ -15,7 +15,7 @@ Sys.getenv("INSTANCE")
 Sys.getenv("PROJECT")
 
 # set the timezone
-Sys.setenv(TZ = Sys.getenv("TIME_ZONE"))
+script_run_time <- with_tz(now(), tzone = Sys.getenv("TIME_ZONE"))
 
 # When script is run Mon-Fri appt_date is the next day
 # When script is run on Sat appt_day is Monday
@@ -82,7 +82,7 @@ attachment_object <- mime_part(zipfile_name, zipfile_name)
 body <- paste0("The attached files include labels to be printed for the PK Yonge COVID-19 project.",
                " These labels are designed for the blood spot cards and swab collection kits to be used at the collection sites.",
                " These labels should be printed and packaged with the blood spot and swab kits for their respective sites.",
-               " The attached files were generated on ", now(), ".",
+               " The attached files were generated on ", script_run_time, ".",
                "\n\nNumber of appts for ", appt_date, ": ",
                str_remove(appt_counts,"c")
 )
