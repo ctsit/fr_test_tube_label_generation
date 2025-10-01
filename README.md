@@ -1,4 +1,11 @@
-# REDCap First Responder Roster and Test Kit Label Generation
+# REDCap First Responder Roster and Test Kit Label Generation - ARCHIVED
+
+**This repository has been archived and is no longer actively maintained.**
+
+This project was archived as of October 1, 2025. The project for which it was written is now over. There's no funding to provide further maintenance for other projects. Please don't hesitate to use this code in accordance with the license; however, the authors are unable to offer any additional support.
+
+-----------
+
 
 This project provides data products in support of the First Responders COVID-19 Testing project at the University of Florida. The data products are created via R Scripts run by a Docker container.
 
